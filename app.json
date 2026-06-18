@@ -1,0 +1,19 @@
+{
+  "expo": {
+    "name": "FocusRoom",
+    "slug": "focusroom",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.course.focusroom"
+    },
+    "android": {
+      "package": "com.course.focusroom"
+    }
+  }
+}
