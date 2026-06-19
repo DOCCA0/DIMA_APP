@@ -12,12 +12,3 @@ export function createRoomPlan(roomId, userId) {
     ]
   };
 }
-
-export function getDemoParticipants() {
-  return [
-    { id: "u1", name: "Mia", status: "Focused", minutes: 52 },
-    { id: "u2", name: "Alex", status: "Reading", minutes: 41 },
-    { id: "u3", name: "Chen", status: "Notes", minutes: 37 },
-    { id: "u4", name: "You", status: "Online", minutes: 0 }
-  ];
-}

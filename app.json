@@ -3,8 +3,9 @@
     "name": "FocusRoom",
     "slug": "focusroom",
     "version": "1.0.0",
+    "scheme": "focusroom",
     "orientation": "portrait",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
     "assetBundlePatterns": [
       "**/*"
     ],
@@ -14,6 +15,17 @@
     },
     "android": {
       "package": "com.course.focusroom"
-    }
+    },
+    "plugins": [
+      "expo-asset",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow FocusRoom to use your camera in live study rooms.",
+          "recordAudioAndroid": false
+        }
+      ],
+      "expo-font"
+    ]
   }
 }
