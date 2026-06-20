@@ -1,16 +1,13 @@
 import {
   addDoc,
   collection,
-  deleteDoc,
   doc,
-  getDoc,
   limit,
   onSnapshot,
   orderBy,
   query,
-  serverTimestamp,
-  setDoc,
-  updateDoc
+  runTransaction,
+  serverTimestamp
 } from "firebase/firestore";
 import { db } from "../config/firebase";
 
@@ -43,35 +40,48 @@ export function watchRooms(callback, onError) {
 }
 
 export async function createRoom(name, user) {
-  const room = await addDoc(collection(db, "studyRooms"), {
-    name: name.trim(),
-    ownerId: user.uid,
-    ownerName: user.displayName || "Student",
-    active: true,
-    createdAt: serverTimestamp()
-  });
+  const room = doc(collection(db, "studyRooms"));
+  const participantRef = doc(db, "studyRooms", room.id, "participants", user.uid);
 
-  await setDoc(
-    doc(db, "studyRooms", room.id, "participants", user.uid),
-    participantData(user)
-  );
+  await runTransaction(db, async (transaction) => {
+    transaction.set(room, {
+      name: name.trim(),
+      ownerId: user.uid,
+      ownerName: user.displayName || "Student",
+      active: true,
+      participantCount: 1,
+      createdAt: serverTimestamp()
+    });
+    transaction.set(participantRef, participantData(user));
+  });
 
   return { id: room.id, name: name.trim(), ownerId: user.uid, active: true };
 }
 
 export async function joinRoom(roomId, user) {
   const roomRef = doc(db, "studyRooms", roomId);
-  const snapshot = await getDoc(roomRef);
-  if (!snapshot.exists() || snapshot.data().active === false) {
-    throw new Error("This room is no longer available.");
-  }
+  const participantRef = doc(db, "studyRooms", roomId, "participants", user.uid);
 
-  await setDoc(
-    doc(db, "studyRooms", roomId, "participants", user.uid),
-    participantData(user)
-  );
+  return runTransaction(db, async (transaction) => {
+    const [roomSnapshot, participantSnapshot] = await Promise.all([
+      transaction.get(roomRef),
+      transaction.get(participantRef)
+    ]);
 
-  return { id: snapshot.id, ...snapshot.data() };
+    if (!roomSnapshot.exists() || roomSnapshot.data().active === false) {
+      throw new Error("This room is no longer available.");
+    }
+
+    if (!participantSnapshot.exists()) {
+      const currentCount = roomSnapshot.data().participantCount;
+      transaction.set(participantRef, participantData(user));
+      transaction.update(roomRef, {
+        participantCount: Number.isInteger(currentCount) ? currentCount + 1 : 1
+      });
+    }
+
+    return { id: roomSnapshot.id, ...roomSnapshot.data() };
+  });
 }
 
 export function watchParticipants(roomId, callback, onError) {
@@ -117,8 +127,24 @@ export async function sendMessage(roomId, user, text) {
 }
 
 export async function leaveRoom(room, userId) {
-  await deleteDoc(doc(db, "studyRooms", room.id, "participants", userId));
-  if (room.ownerId === userId) {
-    await updateDoc(doc(db, "studyRooms", room.id), { active: false });
-  }
+  const roomRef = doc(db, "studyRooms", room.id);
+  const participantRef = doc(db, "studyRooms", room.id, "participants", userId);
+
+  await runTransaction(db, async (transaction) => {
+    const [roomSnapshot, participantSnapshot] = await Promise.all([
+      transaction.get(roomRef),
+      transaction.get(participantRef)
+    ]);
+
+    if (!roomSnapshot.exists() || !participantSnapshot.exists()) return;
+
+    const currentCount = roomSnapshot.data().participantCount;
+    transaction.delete(participantRef);
+
+    if (!Number.isInteger(currentCount) || currentCount <= 1) {
+      transaction.delete(roomRef);
+    } else {
+      transaction.update(roomRef, { participantCount: currentCount - 1 });
+    }
+  });
 }

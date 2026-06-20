@@ -12,12 +12,19 @@ service cloud.firestore {
 
     function isActiveRoom(roomId) {
       let roomPath = /databases/$(database)/documents/studyRooms/$(roomId);
-      return exists(roomPath) && get(roomPath).data.active == true;
+      return getAfter(roomPath).data.active == true;
     }
 
     function isRoomParticipant(roomId) {
       let participantPath = /databases/$(database)/documents/studyRooms/$(roomId)/participants/$(request.auth.uid);
       return isSignedIn() && exists(participantPath);
+    }
+
+    function isJoiningRoom(roomId) {
+      let participantPath = /databases/$(database)/documents/studyRooms/$(roomId)/participants/$(request.auth.uid);
+      return isSignedIn()
+        && !exists(participantPath)
+        && getAfter(participantPath).data.joinedAt == request.time;
     }
 
     match /users/{userId} {
@@ -37,6 +44,7 @@ service cloud.firestore {
           "ownerId",
           "ownerName",
           "active",
+          "participantCount",
           "createdAt"
         ])
         && request.resource.data.name is string
@@ -45,19 +53,31 @@ service cloud.firestore {
         && request.resource.data.ownerId == request.auth.uid
         && request.resource.data.ownerName is string
         && request.resource.data.active == true
+        && request.resource.data.participantCount == 1
         && request.resource.data.createdAt == request.time;
 
-      allow update: if isRoomOwner()
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-          "name",
-          "active"
-        ])
-        && request.resource.data.name is string
-        && request.resource.data.name.size() > 0
-        && request.resource.data.name.size() <= 40
-        && request.resource.data.active is bool;
+      allow update: if (isRoomOwner()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            "name",
+            "active"
+          ])
+          && request.resource.data.name is string
+          && request.resource.data.name.size() > 0
+          && request.resource.data.name.size() <= 40
+          && request.resource.data.active is bool)
+        || (request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            "participantCount"
+          ])
+          && request.resource.data.participantCount is int
+          && request.resource.data.participantCount > 0
+          && ((isJoiningRoom(roomId)
+              && request.resource.data.participantCount == resource.data.participantCount + 1)
+            || (isRoomParticipant(roomId)
+              && request.resource.data.participantCount == resource.data.participantCount - 1)));
 
-      allow delete: if isRoomOwner();
+      allow delete: if isRoomParticipant(roomId)
+        && (!resource.data.keys().hasAny(["participantCount"])
+          || resource.data.participantCount <= 1);
 
       match /participants/{userId} {
         allow read: if isSignedIn();

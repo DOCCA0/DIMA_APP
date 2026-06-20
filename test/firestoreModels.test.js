@@ -73,6 +73,7 @@ test("buildRoomData trims names and stores owner metadata", () => {
       ownerId: "u1",
       ownerName: "Rui",
       active: true,
+      participantCount: 1,
       createdAt: "server-time"
     }
   );
