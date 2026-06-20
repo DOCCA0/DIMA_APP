@@ -52,7 +52,7 @@ firebase deploy --only firestore:rules
 
 See [TESTING.md](./TESTING.md) for the full testing strategy, coverage thresholds, and current gaps.
 
-The current test suite focuses on the FocusRoom web build and shared app logic:
+The current test suite focuses on the FocusRoom web and app logic:
 
 - Core app logic: timer formatting, dashboard stats, saved session payloads, and elapsed minute calculation.
 - Firebase data models: Firestore payload construction, snapshot mapping, active room filtering, and invalid room rejection.
