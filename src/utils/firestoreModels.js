@@ -35,7 +35,6 @@ function buildRoomData(name, user, timestampFactory) {
     ownerId: user.uid,
     ownerName: user.displayName || "Student",
     active: true,
-    participantCount: 1,
     createdAt: timestampFactory()
   };
 }
