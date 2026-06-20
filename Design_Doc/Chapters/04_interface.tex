@@ -1,0 +1,34 @@
+\section{Interaction Design}
+FocusRoom uses a restrained dark interface with a green accent for primary actions and active state. After authentication, three principal tabs expose Lock, Room, and Dashboard. The account view is reached through the profile control in the header. This shallow navigation keeps the most frequent study actions one tap away and avoids a complex route hierarchy.
+
+The interface follows progressive disclosure. The Lock page presents only duration selection, countdown, and start/finish controls. The Room page first shows room discovery and creation; participant video, chat, and end-session controls appear only after joining. The Dashboard converts stored sessions into summary statistics and recent-history cards rather than exposing raw Firestore records.
+
+\section{Authentication Flow}
+At startup the application observes Firebase authentication state before showing the main shell. Users may continue through Google OAuth or create an anonymous Firebase session. For Google sign-in, the browser uses Firebase's web popup flow; native platforms obtain a Google ID token through Expo AuthSession and exchange it for a Firebase credential. After authentication, the client synchronizes the profile document and loads recent sessions.
+
+Anonymous access is useful for demonstrations and low-friction trials, but its data remains tied to that anonymous Firebase identity unless an account-linking feature is added later.
+
+\section{Lock Page}
+The Lock page offers fixed durations of 25, 45, 60, and 90 minutes and displays remaining time in \texttt{MM:SS} form. Starting a session records the wall-clock start and enables the countdown. The strict foreground policy is a deliberate product decision: switching away clears the session rather than allowing an unattended timer to continue.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.36\textwidth,height=0.62\textheight,keepaspectratio]{focus_lock.jpg}
+    \caption{Focus Timer (Lock) interface}
+    \label{fig:lock_screen}
+\end{figure}
+
+\section{Live Room Page}
+Before joining, users can enter a room name or select one of the active rooms delivered by the listener. Camera permission is requested at the moment it becomes necessary. Inside a room, the interface combines a video grid, participant presence, quiet text chat, a leave-without-saving action, and an \emph{End and save session} action.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.36\textwidth,height=0.62\textheight,keepaspectratio]{live_room.jpg}
+    \caption{Live Study Room interface}
+    \label{fig:room_screen}
+\end{figure}
+
+The video implementation publishes camera tracks but disables audio by design. Participant names accompany video tiles, while retry feedback is shown when token retrieval or connection fails. Chat messages distinguish the current user's messages and automatically scroll toward new content.
+
+\section{Dashboard and Feedback}
+The Dashboard computes today's minutes, all-time minutes, session count, and progress toward a 180-minute daily target. Progress is capped at 100 percent for display. Recent records distinguish the two session modes so users can see whether time was accumulated individually or in a room. Save, authentication, permission, and synchronization failures are surfaced with concise alerts rather than being ignored.

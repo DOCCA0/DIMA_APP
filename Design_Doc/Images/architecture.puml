@@ -1,0 +1,47 @@
+@startuml
+title FocusRoom Application Architecture
+skinparam shadowing false
+skinparam componentStyle rectangle
+skinparam packageStyle rectangle
+top to bottom direction
+
+actor Student
+
+package "React Native / Expo Client" {
+  component "App.js\nAuthentication, navigation, timer, dashboard" as App
+  component "RoomScreen\nRoom lifecycle and chat" as Room
+  component "LiveVideoRoom.web\nLiveVideoRoom.native" as Video
+  component "Service modules\nfocusStore, roomStore, userStore" as Services
+  component "livekitToken client" as TokenClient
+}
+
+cloud "Firebase" {
+  component "Authentication" as Auth
+  database "Cloud Firestore\nusers, sessions, rooms,\nparticipants, messages" as DB
+}
+
+node "Token Service" {
+  component "Express API\nlivekit-token-server.js" as TokenServer
+}
+
+cloud "LiveKit Cloud / SFU" as SFU
+
+Student --> App
+App --> Auth : Google / anonymous sign-in
+App --> Services
+App --> Room
+Room --> Services
+Room --> Video
+Services <--> DB : queries, transactions, snapshots
+Video --> TokenClient
+TokenClient --> TokenServer : roomId + identity
+TokenServer --> SFU : sign short-lived JWT
+Video <--> SFU : publish / subscribe WebRTC tracks
+
+note bottom of DB
+  Control plane and persistent data
+end note
+note bottom of SFU
+  Media plane
+end note
+@enduml

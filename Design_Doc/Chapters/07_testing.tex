@@ -1,0 +1,46 @@
+\section{Testing Environment and Method}
+The automated tests were executed on 20 June 2026 with Node.js 22.12.0 using the built-in Node test runner and experimental coverage instrumentation. The command was:
+
+\begin{Verbatim}[fontsize=\small,frame=single]
+node --test --experimental-test-coverage \
+  test/focusMetrics.test.js test/firestoreModels.test.js
+\end{Verbatim}
+
+The two suites focus on deterministic business logic that can be validated without external services. \texttt{focusMetrics.test.js} covers time formatting, invalid-value clamping, daily and total statistics, progress limits, session payloads, ISO date normalization, and elapsed-minute calculation. \texttt{firestoreModels.test.js} covers snapshot mapping, profile and session payloads, participant defaults, room normalization, active-room filtering, and rejection of unavailable rooms.
+
+\section{Results}
+All 18 test cases passed. No tests were skipped or cancelled. The observed test-runner duration was 144.99 ms in the final verification run.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|r|}
+\hline
+\textbf{Metric} & \textbf{Result} \\ \hline
+Test files & 2 \\ \hline
+Test cases & 18 \\ \hline
+Passed & 18 \\ \hline
+Failed & 0 \\ \hline
+Skipped / cancelled & 0 \\ \hline
+Pass rate & 100\% \\ \hline
+\end{tabular}
+\caption{Automated test results}
+\label{tab:test_results}
+\end{table}
+
+\section{Coverage}
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|r|r|r|}
+\hline
+\textbf{Source file} & \textbf{Lines} & \textbf{Branches} & \textbf{Functions} \\ \hline
+\texttt{firestoreModels.js} & 100.00\% & 93.75\% & 100.00\% \\ \hline
+\texttt{focusMetrics.js} & 100.00\% & 82.35\% & 100.00\% \\ \hline
+\end{tabular}
+\caption{Coverage of tested production modules}
+\label{tab:coverage}
+\end{table}
+
+The results provide strong evidence for the extracted mapping and calculation functions, but they do not establish end-to-end correctness of the distributed application. Authentication providers, Firestore transactions and rules, camera permissions, token issuance, WebRTC connections, reconnection behavior, and UI interaction remain outside the automated suite.
+
+\section{Recommended Validation Campaign}
+The next validation layer should use the Firebase Emulator Suite to exercise authorization rules and concurrent room transactions. Integration tests should mock token-server failures and verify cancellation when the video view closes. Device testing should cover camera denial, backgrounding, network handover, LiveKit reconnection, and mixed web/native participants. Finally, end-to-end flows should verify that focus and room sessions appear correctly in the Dashboard on a second device.

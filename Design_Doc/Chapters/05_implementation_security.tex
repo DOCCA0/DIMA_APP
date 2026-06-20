@@ -1,0 +1,36 @@
+\section{Technology Stack}
+The stack combines React Native and Expo clients, Firebase services, and LiveKit rooms.
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{|p{0.25\textwidth}|p{0.31\textwidth}|X|}
+\hline
+\textbf{Area} & \textbf{Technology} & \textbf{Role} \\ \hline
+Application & React 19, React Native 0.81 & Shared component and state model \\ \hline
+Toolchain & Expo 54, EAS Build, Hermes & Development, platform builds, and mobile runtime \\ \hline
+Identity & Firebase Authentication & Google and anonymous identities \\ \hline
+Persistence & Cloud Firestore & Profiles, sessions, rooms, presence, and chat \\ \hline
+Media & LiveKit and WebRTC & Real-time camera publication and subscription \\ \hline
+Server & Node.js, Express & Short-lived LiveKit token generation \\ \hline
+Testing & Node.js built-in test runner & Unit and coverage tests \\ \hline
+\end{tabularx}
+\caption{Technology stack}
+\label{tab:stack}
+\end{table}
+
+\section{Implementation Strategy}
+Development progressed in vertical slices. The first slice established the Expo application shell and authentication. The second added user session persistence, focus metrics, and the dashboard. The third introduced Firestore rooms, transactions, and real-time chat. The final major slice integrated the token service and separate web/native LiveKit components. Pure data-mapping and focus-calculation functions were extracted into utility modules so they could be tested without a browser, device, or Firestore emulator.
+
+\section{Authentication and Authorization}
+All Firestore application data requires a Firebase identity. User profiles and session subcollections can be read or written only when \texttt{request.auth.uid} equals the path's user identifier. Shared room metadata is readable by signed-in users, but writes are constrained by ownership, membership, field allowlists, types, lengths, and server timestamps.
+
+Participant documents are keyed by the authenticated user's ID, preventing a client from writing another user's presence record. Chat reads require room membership; message creation requires membership in an active room and an author ID equal to the authenticated user. Existing messages cannot be updated or deleted. This immutability reduces moderation ambiguity and prevents retroactive message tampering in the current design.
+
+\section{LiveKit Credential Boundary}
+The LiveKit API secret is read only by the Express token service. The client sends a room ID, identity, and display name, then receives a room-scoped token with a two-hour lifetime. It never receives the signing secret. Server-side validation limits the accepted identifier lengths and rejects missing configuration. CORS configuration permits the development client to call the endpoint.
+
+The current course version has an acknowledged boundary weakness: the token endpoint does not verify a Firebase ID token. A production deployment must authenticate each request, derive the LiveKit identity from the verified token, enforce HTTPS, restrict allowed origins, rate-limit requests, and monitor token issuance.
+
+\section{Operational Configuration}
+Firebase public client configuration and platform OAuth client IDs are provided through Expo environment variables. LiveKit URL and client-visible token endpoint are also environment-specific. Server-only LiveKit API credentials belong in the token service environment. Separating these configuration classes avoids embedding a signing secret in the application bundle.
+
+The standard development workflow installs dependencies, starts the token service, and then runs the Expo web or native development client. Native camera and WebRTC support requires a development build produced through EAS rather than the generic Expo Go client.

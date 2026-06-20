@@ -1,0 +1,38 @@
+\section{Firestore Data Model}
+Firestore is organized around user-owned study records and shared room aggregates. Figure~\ref{fig:data_model} summarizes documents, subcollections, and logical relationships.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.92\textwidth,height=0.72\textheight,keepaspectratio]{data_model.png}
+    \caption{Firestore data model}
+    \label{fig:data_model}
+\end{figure}
+
+The path \texttt{users/\{userId\}/sessions/\{sessionId\}} stores both Focus Timer and Study Room records. A session contains its mode, elapsed whole minutes, an ISO calendar date, and a server timestamp. The shared path \texttt{studyRooms/\{roomId\}} stores room metadata; participants and messages are nested subcollections. The Firestore room identifier is reused as the LiveKit room name, providing a stable join key across the control and media planes.
+
+\section{Real-Time State and Transactions}
+The room list, participant list, and chat history use Firestore snapshot listeners. UI state therefore follows server-side changes without polling. Queries are bounded and ordered where recency matters. Listener cleanup occurs when a component unmounts or the active room changes, preventing stale subscriptions from continuing to update the interface.
+
+Room creation writes both the room document and the owner's participant document. Joining verifies that the room still exists and is active, adds the user's participant document, and increments \texttt{participantCount}. Leaving removes presence and decrements the count; when the final participant leaves, the room document is deleted. These multi-document changes use transactions so concurrent joins and departures cannot silently overwrite each other.
+
+\section{Live Room Sequence}
+Figure~\ref{fig:room_sequence} traces the complete room flow. Camera permission is checked before a room is entered. Once Firestore membership succeeds, the video component requests a signed token, connects to the SFU, and publishes the front camera. Chat remains in Firestore and is therefore independent from the media connection.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth,height=0.78\textheight,keepaspectratio]{room_sequence.png}
+    \caption{Create/join, communicate, and leave sequence}
+    \label{fig:room_sequence}
+\end{figure}
+
+\section{Focus Session Processing}
+The focus timer uses an interval to update the remaining seconds and a wall-clock start time to compute saved duration. The latter avoids treating the number of rendered ticks as the authoritative elapsed time. When the countdown reaches zero or the user finishes manually, elapsed minutes are rounded and clamped to at least one before the session is persisted. Figure~\ref{fig:timer_state} captures the state transitions.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.88\textwidth,height=0.55\textheight,keepaspectratio]{timer_state.png}
+    \caption{Focus timer state machine}
+    \label{fig:timer_state}
+\end{figure}
+
+Leaving the foreground during a running session is handled as an explicit reset. The interval and start time are cleared, the selected duration is restored, and the user receives an interruption message after returning. The screen wake lock is active only for an authenticated user on the Lock tab and is released on cleanup.

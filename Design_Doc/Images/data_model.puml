@@ -1,0 +1,45 @@
+@startuml
+title FocusRoom Firestore Data Model
+skinparam shadowing false
+hide methods
+hide stereotypes
+
+class "users/{userId}" as User {
+  displayName : string
+  email : string
+  photoURL : string
+  updatedAt : timestamp
+}
+class "sessions/{sessionId}" as Session {
+  mode : Focus Timer | Study Room
+  minutes : integer
+  date : yyyy-mm-dd
+  createdAt : timestamp
+}
+class "studyRooms/{roomId}" as Room {
+  name : string
+  ownerId : uid
+  ownerName : string
+  active : boolean
+  participantCount : integer
+  createdAt : timestamp
+}
+class "participants/{userId}" as Participant {
+  displayName : string
+  photoURL : string
+  joinedAt : timestamp
+  cameraOn : boolean
+}
+class "messages/{messageId}" as Message {
+  userId : uid
+  displayName : string
+  text : string [1..500]
+  createdAt : timestamp
+}
+
+User "1" *-- "0..*" Session
+Room "1" *-- "1..*" Participant
+Room "1" *-- "0..100" Message
+User "1" .. "0..*" Participant : identity
+User "1" .. "0..*" Message : author
+@enduml

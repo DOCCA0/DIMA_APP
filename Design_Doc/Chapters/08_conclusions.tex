@@ -1,0 +1,23 @@
+\section{Project Assessment}
+FocusRoom demonstrates a coherent cross-platform design for individual and social study. The implementation keeps ordinary application state in Firestore and delegates media to an SFU, avoiding the scalability and mobile uplink cost of a full-mesh design. Platform-specific code is confined to the video boundary, while authentication, room orchestration, session persistence, and dashboard behavior remain shared.
+
+The strongest implementation choices are the explicit control-plane/media-plane separation, transaction-based room membership, server-side token signing, and extraction of pure data functions for unit testing. The current test suite passes completely and provides high coverage for those extracted modules.
+
+\section{Known Limitations}
+The LiveKit token endpoint currently trusts client-supplied identity fields and does not verify a Firebase ID token. Anonymous accounts are not upgraded or linked to permanent identities. Automated tests do not yet cover Firestore rules, distributed concurrency, UI flows, or real media sessions. Room cleanup also depends on clients executing leave logic; abrupt process termination can leave stale presence until additional cleanup logic intervenes.
+
+The timer's strict reset policy is intentional, but it treats all foreground departures alike, including unavoidable interruptions. In addition, the current Dashboard uses a fixed 180-minute daily goal and offers no editing or deletion of saved sessions.
+
+\section{Future Development}
+Recommended next steps are prioritized as follows:
+\begin{enumerate}
+    \item \textbf{Harden token issuance:} verify Firebase ID tokens, derive identity server-side, use HTTPS, restrict CORS, add rate limiting, and log issuance decisions.
+    \item \textbf{Improve presence robustness:} add heartbeat or disconnect-aware cleanup and reconcile stale participant counts through a trusted backend process.
+    \item \textbf{Expand validation:} add Firebase Emulator rule tests, transaction integration tests, component tests, and cross-device LiveKit scenarios.
+    \item \textbf{Improve account continuity:} support linking anonymous sessions to Google accounts without losing history.
+    \item \textbf{Enhance study controls:} configurable daily goals, session editing, reminders, and optional interruption grace handling.
+    \item \textbf{Add room moderation:} ownership transfer, participant removal, reporting, and retention controls for chat.
+    \item \textbf{Operationalize deployment:} health checks, structured logging, monitoring, and documented environment separation for development and production.
+\end{enumerate}
+
+With these additions, the existing architecture can evolve from a robust course project into a production-oriented collaborative study service without replacing its central design.

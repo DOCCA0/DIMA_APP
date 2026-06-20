@@ -1,0 +1,31 @@
+\section{Requirements Traceability Matrix}
+Table~\ref{tab:traceability} maps each functional requirement to concrete implementation elements and its status in the inspected codebase.
+
+\small
+\begin{longtable}{|p{0.06\textwidth}|p{0.27\textwidth}|p{0.36\textwidth}|p{0.12\textwidth}|}
+\caption{Requirements-to-implementation traceability}\label{tab:traceability}\\
+\hline
+\textbf{ID} & \textbf{Summary} & \textbf{Implementation} & \textbf{Status} \\ \hline
+\endfirsthead
+\hline \textbf{ID} & \textbf{Summary} & \textbf{Implementation} & \textbf{Status} \\ \hline
+\endhead
+FR1 & Google and guest authentication & \texttt{googleAuth.js}, Firebase Auth, login shell & Done \\ \hline
+FR2 & Select focus duration & \texttt{MODE\_MINUTES}, Lock UI & Done \\ \hline
+FR3 & One-second countdown & timer state and interval in \texttt{App.js} & Done \\ \hline
+FR4 & Wake lock and interruption reset & Expo KeepAwake, React Native AppState listener & Done \\ \hline
+FR5 & Persist focus session & \texttt{saveSession}, \texttt{focusStore.js} & Done \\ \hline
+FR6 & Create or join a room & \texttt{RoomScreen.js}, \texttt{createRoom}, \texttt{joinRoom} & Done \\ \hline
+FR7 & Real-time room presence & Firestore transactions and snapshot listeners & Done \\ \hline
+FR8 & Cross-platform camera video & Web/native \texttt{LiveVideoRoom}, LiveKit & Done \\ \hline
+FR9 & Real-time text chat & \texttt{watchMessages}, \texttt{sendMessage}, security rules & Done \\ \hline
+FR10 & Save room elapsed time & \texttt{exitRoom}, \texttt{onSessionSaved} & Done \\ \hline
+FR11 & Dashboard metrics and history & session state, focus metrics, Dashboard UI & Done \\ \hline
+FR12 & Account view and logout & Account branch, \texttt{signOutGoogle} & Done \\ \hline
+\end{longtable}
+\normalsize
+
+\section{Architectural Traceability Notes}
+The strict timer behavior in FR4 is enforced at the application-state boundary rather than only by UI controls. FR7 relies on transactions because presence and the aggregate count must change together. FR8 crosses a deliberate platform boundary but preserves a common parent contract. FR9 is enforced twice: the UI limits composition to 500 characters, and Firestore rules independently validate length, authorship, membership, and timestamp. FR5 and FR10 converge on the same session representation, allowing the Dashboard to aggregate both study modes without special persistence logic.
+
+\section{Non-Functional Verification Points}
+Portability is visible in the small number of platform-suffixed files. Resource bounds are implemented in Firestore queries for rooms, messages, and sessions. Data ownership is represented directly in document paths and rules. The remaining production-readiness risk is concentrated at the external token endpoint, where Firebase identity verification and abuse controls are not yet present.

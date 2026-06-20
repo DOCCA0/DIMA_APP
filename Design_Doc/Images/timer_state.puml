@@ -1,0 +1,17 @@
+@startuml
+title Focus Timer State Machine
+skinparam shadowing false
+
+[*] --> Ready
+Ready --> Running : Start selected duration
+Running --> Running : Tick every second
+Running --> Completed : remaining = 0
+Running --> FinishedEarly : Finish manually
+Running --> Reset : app leaves foreground
+Completed --> Saving : calculate elapsed minutes
+FinishedEarly --> Saving : calculate elapsed minutes
+Saving --> Ready : Firestore write succeeds
+Saving --> Ready : write fails / show error
+Reset --> Ready : clear start time and restore duration
+Ready --> Ready : choose 25 / 45 / 60 / 90 min
+@enduml

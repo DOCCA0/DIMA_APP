@@ -1,0 +1,56 @@
+\section{Architectural Overview}
+FocusRoom follows a client--cloud architecture with a separate media plane. The React Native client owns navigation, presentation state, focus timing, and orchestration. Firebase Authentication establishes identity, while Cloud Firestore stores profiles, sessions, rooms, participant presence, and chat. A small Express service signs short-lived LiveKit tokens; the LiveKit selective forwarding unit (SFU) carries WebRTC video. Figure~\ref{fig:architecture} shows the resulting separation.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.92\textwidth,height=0.45\textheight,keepaspectratio]{architecture.png}
+    \caption{FocusRoom application architecture}
+    \label{fig:architecture}
+\end{figure}
+
+This split gives each subsystem a workload suited to it. Firestore handles durable low-bandwidth state and real-time notifications. LiveKit handles high-bandwidth media, congestion control, track subscription, reconnection, and NAT traversal. The token service is intentionally narrow: it keeps the LiveKit API secret outside the client and issues room-scoped credentials.
+
+\section{Client Decomposition}
+The top-level \texttt{App.js} component coordinates authentication, tab selection, the focus timer, session loading, and dashboard aggregation. \texttt{RoomScreen.js} owns room discovery, membership, participant presence, chat subscriptions, and room-session duration. Firestore operations are moved into service modules rather than embedded in UI code.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\textwidth}{|p{0.30\textwidth}|X|}
+\hline
+\textbf{Module} & \textbf{Responsibility} \\ \hline
+\texttt{App.js} & Authentication shell, Lock/Room/Dashboard navigation, timer lifecycle, account view, and session aggregation. \\ \hline
+\texttt{RoomScreen.js} & Room creation and joining, permissions, presence, chat, leaving, and saving elapsed room time. \\ \hline
+\texttt{focusStore.js} & Load and save user study sessions in Firestore. \\ \hline
+\texttt{roomStore.js} & Room queries, transactions, participants, and messages. \\ \hline
+\texttt{googleAuth.js} & Google and anonymous authentication flows and auth-state observation. \\ \hline
+\texttt{LiveVideoRoom.*.js} & Platform-specific LiveKit rendering and track publication. \\ \hline
+\texttt{livekitToken.js} & Cancellable request from the client to the token endpoint. \\ \hline
+\texttt{livekit-token-server.js} & Server-side JWT signing and input validation. \\ \hline
+\end{tabularx}
+\caption{Main implementation modules}
+\label{tab:modules}
+\end{table}
+
+\section{Cross-Platform Video Boundary}
+React Native and the web use different LiveKit component packages and WebRTC bindings. Metro's platform file resolution selects either the web or native \texttt{LiveVideoRoom} implementation. Both receive the same room and user contract from \texttt{RoomScreen}. This keeps platform branching out of the main room workflow.
+
+\section{SFU Decision}
+Full-mesh peer-to-peer video was considered but rejected for group rooms. With $N$ participants, a full mesh requires $N(N-1)/2$ peer connections and each participant uploads the same camera stream $N-1$ times. Four users therefore create six peer links and three outgoing video copies per device. An SFU normally requires one upstream publication per participant and selectively forwards tracks to subscribers.
+
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{|X|p{0.28\textwidth}|p{0.28\textwidth}|}
+\hline
+\textbf{Criterion} & \textbf{LiveKit SFU} & \textbf{Full-mesh P2P} \\ \hline
+Uploads per participant & Usually one & $N-1$ \\ \hline
+Four-user topology & Four client--SFU links & Six peer links \\ \hline
+Mobile CPU, battery, and uplink pressure & Lower and centrally adaptable & Increases rapidly with room size \\ \hline
+Infrastructure & Media server required & No media server \\ \hline
+Operational complexity & SDK-managed reconnection and quality control & More application-managed signaling and recovery \\ \hline
+\end{tabularx}
+\caption{SFU and full-mesh P2P comparison}
+\label{tab:sfu_comparison}
+\end{table}
+
+LiveKit adaptive streaming and dynacast further reduce unnecessary decoding and publication quality when a track is small or unused. The SFU therefore provides the better trade-off for FocusRoom's multi-participant, mobile-oriented scenario.

@@ -1,0 +1,32 @@
+@startuml
+title Create or Join a Live Study Room
+skinparam shadowing false
+autonumber
+actor Student
+participant "RoomScreen" as UI
+database "Cloud Firestore" as DB
+participant "Token Service" as TS
+participant "LiveKit SFU" as SFU
+
+Student -> UI : Create room / Join room
+UI -> UI : Validate name and camera permission
+alt create room
+  UI -> DB : Transaction: room + owner participant
+else join room
+  UI -> DB : Transaction: verify active room,\nadd participant, increment count
+end
+DB --> UI : Room snapshot
+UI -> DB : Subscribe to participants and messages
+UI -> TS : Request token(roomId, uid, displayName)
+TS -> TS : Sign two-hour room JWT
+TS --> UI : Token + LiveKit URL
+UI -> SFU : Connect and publish front camera
+SFU --> UI : Remote participant tracks
+Student -> UI : Send message
+UI -> DB : Add immutable message (max 500 chars)
+DB --> UI : Real-time message snapshot
+Student -> UI : End and save session
+UI -> DB : Save elapsed minutes
+UI -> DB : Transaction: remove presence / update count
+UI -> SFU : Disconnect
+@enduml

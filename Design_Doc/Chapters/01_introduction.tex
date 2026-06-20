@@ -1,0 +1,36 @@
+\section{Purpose and Scope}
+FocusRoom is a cross-platform study application that combines strict individual focus sessions with synchronous online study rooms. The project targets students who want to begin a session quickly, reduce distraction, share a quiet virtual space with other learners, and review their accumulated study time. A single React Native codebase supports web, Android, and iOS; platform-specific implementations are limited to the real-time video layer.
+
+The current release provides Google and anonymous authentication, configurable focus timers, foreground interruption detection, live video rooms, text chat, cloud session history, and a dashboard. The scope deliberately excludes audio communication: rooms are intended to reproduce the social presence of a library while remaining quiet.
+
+\section{Functional Requirements}
+Table~\ref{tab:functional_requirements} lists the requirements derived from the implemented user flows and project code.
+
+\begin{longtable}{|p{0.09\textwidth}|p{0.78\textwidth}|}
+\caption{FocusRoom functional requirements}\label{tab:functional_requirements}\\
+\hline
+\textbf{ID} & \textbf{Requirement} \\ \hline
+\endfirsthead
+\hline \textbf{ID} & \textbf{Requirement} \\ \hline
+\endhead
+FR1 & The user shall sign in using Google or an anonymous guest account. \\ \hline
+FR2 & The user shall select a 25, 45, 60, or 90 minute focus session. \\ \hline
+FR3 & The application shall display and maintain a one-second countdown while a focus session is running. \\ \hline
+FR4 & The application shall keep the screen awake on the Lock page and reset a running session when the application leaves the foreground. \\ \hline
+FR5 & A completed or manually finished focus session shall be stored in the authenticated user's history. \\ \hline
+FR6 & The user shall create a named study room or join an active room after granting camera permission. \\ \hline
+FR7 & Room membership and participant counts shall update in real time. \\ \hline
+FR8 & Room participants shall publish and receive live camera video across web, Android, and iOS. \\ \hline
+FR9 & Room participants shall exchange real-time text messages of at most 500 characters. \\ \hline
+FR10 & The user shall leave a room with or without saving the elapsed room time as a study session. \\ \hline
+FR11 & The dashboard shall show today's minutes, total minutes, number of sessions, daily-goal progress, and recent sessions. \\ \hline
+FR12 & The user shall view basic account information and sign out. \\ \hline
+\end{longtable}
+
+\section{Quality Attributes and Constraints}
+The architecture is shaped by four principal quality goals. First, \textbf{portability}: most interface and business logic is shared across all supported platforms. Second, \textbf{real-time responsiveness}: Firestore snapshot listeners propagate control-state changes without manual refresh, while LiveKit transports media. Third, \textbf{consistency}: Firestore transactions keep participant documents and aggregate room counts aligned. Fourth, \textbf{security}: Firebase Authentication scopes data access and the LiveKit signing secret remains on the server.
+
+The application also applies explicit resource limits. The client loads at most 20 active rooms, 100 recent messages, and 30 study sessions. Room names are limited to 40 characters and chat messages to 500 characters. These constraints bound common reads, memory use, and user-generated input.
+
+\section{Document Structure}
+Chapter~2 describes the architecture and major technology decisions. Chapter~3 details data persistence and real-time communication. Chapter~4 presents the user interface and principal flows. Chapter~5 discusses implementation and security. Chapter~6 maps requirements to components. Chapter~7 reports validation results, and Chapter~8 records limitations and future work.

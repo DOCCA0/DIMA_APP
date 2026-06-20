@@ -5,3 +5,27 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .DS_Store
+Design Document temp
+
+# LaTeX build artifacts (Design_Doc source files remain tracked)
+/Design_Doc/*.acn
+/Design_Doc/*.acr
+/Design_Doc/*.alg
+/Design_Doc/*.aux
+/Design_Doc/*.bbl
+/Design_Doc/*.bcf
+/Design_Doc/*.blg
+/Design_Doc/*.fdb_latexmk
+/Design_Doc/*.fls
+/Design_Doc/*.glo
+/Design_Doc/*.glg
+/Design_Doc/*.gls
+/Design_Doc/*.ist
+/Design_Doc/*.lof
+/Design_Doc/*.log
+/Design_Doc/*.lot
+/Design_Doc/*.out
+/Design_Doc/*.pdf
+/Design_Doc/*.run.xml
+/Design_Doc/*.synctex.gz
+/Design_Doc/*.toc
