@@ -1,6 +1,7 @@
 import {
   GoogleAuthProvider,
   onAuthStateChanged,
+  signInAnonymously,
   signInWithCredential,
   signInWithPopup,
   signOut
@@ -18,6 +19,10 @@ export function signInWithGoogleToken(idToken) {
 
 export function signInWithGoogleWeb() {
   return signInWithPopup(auth, new GoogleAuthProvider());
+}
+
+export function signInAsGuest() {
+  return signInAnonymously(auth);
 }
 
 export function signOutGoogle() {

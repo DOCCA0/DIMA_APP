@@ -20,6 +20,7 @@ import * as WebBrowser from "expo-web-browser";
 import RoomScreen from "./src/components/RoomScreen";
 import { loadSessions, saveSession } from "./src/services/focusStore";
 import {
+  signInAsGuest,
   signInWithGoogleToken,
   signInWithGoogleWeb,
   signOutGoogle,
@@ -240,6 +241,17 @@ export default function App() {
     }
   }
 
+  async function handleGuestLogin() {
+    setAuthBusy(true);
+    try {
+      await signInAsGuest();
+    } catch (error) {
+      Alert.alert("Guest sign-in failed", error.message);
+    } finally {
+      setAuthBusy(false);
+    }
+  }
+
   if (!authReady || !user) {
     return (
       <SafeAreaView style={styles.safe}>
@@ -250,19 +262,29 @@ export default function App() {
             {authReady ? "Sign in to continue" : "Checking account..."}
           </Text>
           <Text style={styles.loginText}>
-            Your focus sessions are stored securely under your Google account.
+            Sign in with Google or continue as a guest to save your focus sessions.
           </Text>
           {authReady && (
-            <TouchableOpacity
-              disabled={authBusy || (!googleRequest && Platform.OS !== "web")}
-              style={[styles.googleButton, authBusy && styles.disabledButton]}
-              onPress={handleGoogleLogin}
-            >
-              <Text style={styles.googleMark}>G</Text>
-              <Text style={styles.googleButtonText}>
-                {authBusy ? "Please wait..." : "Continue with Google"}
-              </Text>
-            </TouchableOpacity>
+            <>
+              <TouchableOpacity
+                disabled={authBusy || (!googleRequest && Platform.OS !== "web")}
+                style={[styles.googleButton, authBusy && styles.disabledButton]}
+                onPress={handleGoogleLogin}
+              >
+                <Text style={styles.googleMark}>G</Text>
+                <Text style={styles.googleButtonText}>
+                  {authBusy ? "Please wait..." : "Continue with Google"}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                disabled={authBusy}
+                style={[styles.guestButton, authBusy && styles.disabledButton]}
+                onPress={handleGuestLogin}
+              >
+                <Ionicons name="person-outline" size={20} color="#f4f7fb" />
+                <Text style={styles.guestButtonText}>Continue as guest</Text>
+              </TouchableOpacity>
+            </>
           )}
         </View>
       </SafeAreaView>
@@ -425,8 +447,12 @@ export default function App() {
                     </View>
                   )}
                   <View style={styles.profileText}>
-                    <Text style={styles.profileName}>{user.displayName || "Google user"}</Text>
-                    <Text style={styles.subtle}>{user.email}</Text>
+                    <Text style={styles.profileName}>
+                      {user.displayName || (user.isAnonymous ? "Guest" : "Google user")}
+                    </Text>
+                    <Text style={styles.subtle}>
+                      {user.email || "Anonymous account"}
+                    </Text>
                   </View>
                 </View>
 
@@ -844,6 +870,23 @@ const styles = StyleSheet.create({
     marginRight: 10
   },
   googleButtonText: {
+    color: "#f4f7fb",
+    fontSize: 15,
+    fontWeight: "800"
+  },
+  guestButton: {
+    minHeight: 52,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#293140",
+    marginTop: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 9,
+    backgroundColor: "#151a23"
+  },
+  guestButtonText: {
     color: "#f4f7fb",
     fontSize: 15,
     fontWeight: "800"

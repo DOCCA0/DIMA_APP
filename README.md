@@ -40,7 +40,7 @@ src/services/webrtcRoom.js
 
 `focusStore.js` stores authenticated user sessions in Firestore. `webrtcRoom.js` shows the signaling flow expected for peer-to-peer rooms.
 
-Firebase Authentication and Firestore are initialized in `src/config/firebase.js`. The current Firebase project is `focusroom-cb3b4`.
+Firebase Authentication and Firestore are initialized in `src/config/firebase.js`. The current Firebase project is `app-room-6c5f2`.
 
 Deploy the included Firestore rules before using cloud sessions:
 

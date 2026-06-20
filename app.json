@@ -1,7 +1,9 @@
 {
   "expo": {
+
     "name": "FocusRoom",
     "slug": "focusroom",
+    "jsEngine": "jsc",
     "version": "1.0.0",
     "scheme": "focusroom",
     "orientation": "portrait",
@@ -25,7 +27,8 @@
           "recordAudioAndroid": false
         }
       ],
-      "expo-font"
+      "expo-font",
+      "expo-web-browser"
     ]
   }
 }

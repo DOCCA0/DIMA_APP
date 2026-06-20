@@ -8,14 +8,14 @@ import {
 import { getFirestore } from "firebase/firestore";
 import { Platform } from "react-native";
 
-export const firebaseConfig = {
-  apiKey: "AIzaSyBjaaDXLSlJ871_gSTLaOo-rHKOqktQHa0",
-  authDomain: "focusroom-cb3b4.firebaseapp.com",
-  projectId: "focusroom-cb3b4",
-  storageBucket: "focusroom-cb3b4.firebasestorage.app",
-  messagingSenderId: "10490770360",
-  appId: "1:10490770360:web:4cdb981e6db9f8b950954d",
-  measurementId: "G-3051DMDVCJ"
+const firebaseConfig = {
+  apiKey: "AIzaSyC_434VWbzScytrgkCslZTiTil-S5BoSaQ",
+  authDomain: "app-room-6c5f2.firebaseapp.com",
+  projectId: "app-room-6c5f2",
+  storageBucket: "app-room-6c5f2.firebasestorage.app",
+  messagingSenderId: "200861104370",
+  appId: "1:200861104370:web:adf819ffafc487bfa2386b",
+  measurementId: "G-G1RTGSLYMN"
 };
 
 export const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
