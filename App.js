@@ -27,6 +27,7 @@ import {
   watchAuthState
 } from "./src/services/googleAuth";
 import { syncUserProfile } from "./src/services/userStore";
+import "./src/livekitSetup";
 
 WebBrowser.maybeCompleteAuthSession();
 

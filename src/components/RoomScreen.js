@@ -1,10 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
-import { CameraView, useCameraPermissions } from "expo-camera";
+import { useCameraPermissions } from "expo-camera";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -12,6 +11,7 @@ import {
   TouchableOpacity,
   View
 } from "react-native";
+import LiveVideoRoom from "./LiveVideoRoom";
 import {
   createRoom,
   joinRoom,
@@ -31,7 +31,6 @@ export default function RoomScreen({ user, onSessionSaved }) {
   const [messageText, setMessageText] = useState("");
   const [messageBusy, setMessageBusy] = useState(false);
   const [roomName, setRoomName] = useState("");
-  const [facing, setFacing] = useState("front");
   const [busy, setBusy] = useState(false);
   const [joinedAt, setJoinedAt] = useState(null);
   const activeRoomRef = useRef(null);
@@ -176,60 +175,7 @@ export default function RoomScreen({ user, onSessionSaved }) {
           </TouchableOpacity>
         </View>
 
-        <View style={styles.cameraFrame}>
-          {permission?.granted ? (
-            <CameraView style={styles.camera} facing={facing} mirror={facing === "front"} />
-          ) : (
-            <View style={styles.permissionView}>
-              <Ionicons name="videocam-off-outline" size={34} color="#8793a8" />
-              <Text style={styles.permissionText}>Camera permission is required.</Text>
-              <TouchableOpacity style={styles.smallButton} onPress={requestPermission}>
-                <Text style={styles.smallButtonText}>Enable camera</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-          {permission?.granted && (
-            <View style={styles.liveBadge}>
-              <View style={styles.liveDot} />
-              <Text style={styles.liveText}>LIVE</Text>
-            </View>
-          )}
-          {permission?.granted && (
-            <TouchableOpacity
-              style={styles.flipButton}
-              onPress={() => setFacing((value) => value === "front" ? "back" : "front")}
-            >
-              <Ionicons name="camera-reverse-outline" size={22} color="#f4f7fb" />
-            </TouchableOpacity>
-          )}
-          <Text style={styles.cameraName}>{user.displayName || "You"}</Text>
-        </View>
-
-        <View style={styles.participantHeader}>
-          <Text style={styles.sectionLabel}>Participants</Text>
-          <Text style={styles.countText}>{participants.length}</Text>
-        </View>
-        <View style={styles.participantGrid}>
-          {participants
-            .filter((person) => person.id !== user.uid)
-            .map((person) => (
-              <View key={person.id} style={styles.participantTile}>
-                {person.photoURL ? (
-                  <Image source={{ uri: person.photoURL }} style={styles.participantAvatar} />
-                ) : (
-                  <View style={styles.participantFallback}>
-                    <Text style={styles.participantInitial}>
-                      {(person.displayName || "S").slice(0, 1)}
-                    </Text>
-                  </View>
-                )}
-                <Text style={styles.participantName} numberOfLines={1}>
-                  {person.displayName || "Student"}
-                </Text>
-                <Ionicons name="videocam" size={15} color="#75e6b1" />
-              </View>
-            ))}
-        </View>
+        <LiveVideoRoom room={activeRoom} user={user} presenceCount={participants.length} />
 
         <View style={styles.chatPanel}>
           <View style={styles.chatHeader}>

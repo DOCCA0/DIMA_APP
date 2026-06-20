@@ -1,9 +1,8 @@
 {
   "expo": {
-
     "name": "FocusRoom",
     "slug": "focusroom",
-    "jsEngine": "jsc",
+    "jsEngine": "hermes",
     "version": "1.0.0",
     "scheme": "focusroom",
     "orientation": "portrait",
@@ -13,10 +12,26 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.course.focusroom"
+      "bundleIdentifier": "com.course.focusroom",
+      "infoPlist": {
+        "NSAppTransportSecurity": {
+          "NSAllowsLocalNetworking": true
+        }
+      },
+      "bitcode": false
     },
     "android": {
-      "package": "com.course.focusroom"
+      "package": "com.course.focusroom",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.ACCESS_NETWORK_STATE",
+        "android.permission.INTERNET",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.WAKE_LOCK",
+        "android.permission.BLUETOOTH"
+      ]
     },
     "plugins": [
       "expo-asset",
@@ -28,7 +43,22 @@
         }
       ],
       "expo-font",
-      "expo-web-browser"
-    ]
+      "expo-web-browser",
+      "@livekit/react-native-expo-plugin",
+      "@config-plugins/react-native-webrtc",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "663dbbb9-4562-46d2-ad47-f2dde1a8beb5"
+      }
+    }
   }
 }
