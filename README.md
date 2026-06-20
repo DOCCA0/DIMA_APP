@@ -47,3 +47,31 @@ Deploy the included Firestore rules before using cloud sessions:
 ```bash
 firebase deploy --only firestore:rules
 ```
+
+# Test
+
+See [TESTING.md](./TESTING.md) for the testing strategy, coverage thresholds, and current gaps.
+
+Run unit tests:
+
+```bash
+npm test
+```
+
+Run unit tests with coverage thresholds:
+
+```bash
+npm run test:coverage
+```
+
+For a local web smoke check, start the Expo web server first:
+
+```bash
+npm run web
+```
+
+Then run this in another terminal:
+
+```bash
+npm run test:web:server
+```
