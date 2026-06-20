@@ -19,7 +19,6 @@ The app supports two focus modes:
 
 ```bash
 npm install
-cp .env.example .env
 npm start
 ```
 
