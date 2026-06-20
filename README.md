@@ -48,23 +48,41 @@ Deploy the included Firestore rules before using cloud sessions:
 firebase deploy --only firestore:rules
 ```
 
-# Test
+## Test
 
-See [TESTING.md](./TESTING.md) for the testing strategy, coverage thresholds, and current gaps.
+See [TESTING.md](./TESTING.md) for the full testing strategy, coverage thresholds, and current gaps.
 
-Run unit tests:
+The current test suite focuses on the FocusRoom web build and shared app logic:
+
+- Core app logic: timer formatting, dashboard stats, saved session payloads, and elapsed minute calculation.
+- Firebase data models: Firestore payload construction, snapshot mapping, active room filtering, and invalid room rejection.
+- Web smoke check: verifies that the local Expo web server returns the FocusRoom app shell.
+
+Run all unit tests:
 
 ```bash
 npm test
 ```
 
-Run unit tests with coverage thresholds:
+Run unit tests directly:
+
+```bash
+npm run test:unit
+```
+
+Run coverage with thresholds:
 
 ```bash
 npm run test:coverage
 ```
 
-For a local web smoke check, start the Expo web server first:
+Current coverage thresholds:
+
+- Lines: 90%
+- Functions: 90%
+- Branches: 80%
+
+For a local web smoke check, start the FocusRoom web server first:
 
 ```bash
 npm run web
