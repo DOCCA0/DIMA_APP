@@ -14,7 +14,7 @@ After login, the app loads the user's recent study sessions from Firestore. The 
 
 ### 1.2 Focus Lock
 
-![FocusRoom Lock interface|354](plot/Lock.jpg)
+![FocusRoom Lock interface|250](plot/Lock.jpg)
 
 The Lock page is the main individual study function. A user can select 25, 45, 60, or 90 minutes and start a countdown. The remaining time is shown in `MM:SS` format.
 
@@ -24,7 +24,7 @@ When the timer ends, or when the user finishes it manually, the elapsed minutes 
 
 ### 1.3 Live Study Room
 
-![FocusRoom Room interface|354](plot/room.jpg)
+![FocusRoom Room interface|250](plot/room.jpg)
 
 The Room page lets users study together through live video. Active rooms appear automatically through a Firestore listener. A user can enter a room name, create a new room, or join an existing one.
 
