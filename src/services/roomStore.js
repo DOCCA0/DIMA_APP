@@ -84,6 +84,38 @@ export function watchParticipants(roomId, callback, onError) {
   );
 }
 
+export function watchMessages(roomId, callback, onError) {
+  const messagesQuery = query(
+    collection(db, "studyRooms", roomId, "messages"),
+    orderBy("createdAt", "desc"),
+    limit(100)
+  );
+
+  return onSnapshot(
+    messagesQuery,
+    (snapshot) => {
+      callback(
+        snapshot.docs
+          .map((item) => ({ id: item.id, ...item.data() }))
+          .reverse()
+      );
+    },
+    onError
+  );
+}
+
+export async function sendMessage(roomId, user, text) {
+  const message = text.trim();
+  if (!message) return;
+
+  await addDoc(collection(db, "studyRooms", roomId, "messages"), {
+    userId: user.uid,
+    displayName: user.displayName || "Guest",
+    text: message,
+    createdAt: serverTimestamp()
+  });
+}
+
 export async function leaveRoom(room, userId) {
   await deleteDoc(doc(db, "studyRooms", room.id, "participants", userId));
   if (room.ownerId === userId) {

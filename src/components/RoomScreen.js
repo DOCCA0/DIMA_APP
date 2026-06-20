@@ -5,6 +5,7 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -15,6 +16,8 @@ import {
   createRoom,
   joinRoom,
   leaveRoom,
+  sendMessage,
+  watchMessages,
   watchParticipants,
   watchRooms
 } from "../services/roomStore";
@@ -24,11 +27,15 @@ export default function RoomScreen({ user, onSessionSaved }) {
   const [rooms, setRooms] = useState([]);
   const [activeRoom, setActiveRoom] = useState(null);
   const [participants, setParticipants] = useState([]);
+  const [messages, setMessages] = useState([]);
+  const [messageText, setMessageText] = useState("");
+  const [messageBusy, setMessageBusy] = useState(false);
   const [roomName, setRoomName] = useState("");
   const [facing, setFacing] = useState("front");
   const [busy, setBusy] = useState(false);
   const [joinedAt, setJoinedAt] = useState(null);
   const activeRoomRef = useRef(null);
+  const chatScrollRef = useRef(null);
 
   useEffect(() => {
     activeRoomRef.current = activeRoom;
@@ -59,6 +66,20 @@ export default function RoomScreen({ user, onSessionSaved }) {
       activeRoom.id,
       setParticipants,
       (error) => Alert.alert("Participant sync failed", error.message)
+    );
+  }, [activeRoom]);
+
+  useEffect(() => {
+    if (!activeRoom) {
+      setMessages([]);
+      setMessageText("");
+      return;
+    }
+
+    return watchMessages(
+      activeRoom.id,
+      setMessages,
+      (error) => Alert.alert("Chat sync failed", error.message)
     );
   }, [activeRoom]);
 
@@ -123,6 +144,22 @@ export default function RoomScreen({ user, onSessionSaved }) {
       Alert.alert("Could not leave room", error.message);
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function handleSendMessage() {
+    const text = messageText.trim();
+    if (!text || !activeRoom || messageBusy) return;
+
+    setMessageBusy(true);
+    setMessageText("");
+    try {
+      await sendMessage(activeRoom.id, user, text);
+    } catch (error) {
+      setMessageText(text);
+      Alert.alert("Message not sent", error.message);
+    } finally {
+      setMessageBusy(false);
     }
   }
 
@@ -192,6 +229,69 @@ export default function RoomScreen({ user, onSessionSaved }) {
                 <Ionicons name="videocam" size={15} color="#75e6b1" />
               </View>
             ))}
+        </View>
+
+        <View style={styles.chatPanel}>
+          <View style={styles.chatHeader}>
+            <Text style={styles.sectionLabel}>Room chat</Text>
+            <Text style={styles.messageCount}>{messages.length}</Text>
+          </View>
+
+          <ScrollView
+            ref={chatScrollRef}
+            style={styles.messageList}
+            contentContainerStyle={styles.messageListContent}
+            nestedScrollEnabled
+            onContentSizeChange={() => chatScrollRef.current?.scrollToEnd({ animated: true })}
+          >
+            {!messages.length && (
+              <Text style={styles.chatEmpty}>No messages yet. Say hello!</Text>
+            )}
+            {messages.map((message) => {
+              const isOwn = message.userId === user.uid;
+              return (
+                <View
+                  key={message.id}
+                  style={[
+                    styles.messageBubble,
+                    isOwn ? styles.ownMessageBubble : styles.otherMessageBubble
+                  ]}
+                >
+                  <Text style={styles.messageAuthor}>
+                    {isOwn ? "You" : message.displayName || "Guest"}
+                  </Text>
+                  <Text style={styles.messageText}>{message.text}</Text>
+                </View>
+              );
+            })}
+          </ScrollView>
+
+          <View style={styles.messageComposer}>
+            <TextInput
+              value={messageText}
+              onChangeText={setMessageText}
+              placeholder="Write a message..."
+              placeholderTextColor="#68758a"
+              maxLength={500}
+              multiline
+              style={styles.messageInput}
+            />
+            <TouchableOpacity
+              accessibilityLabel="Send message"
+              disabled={!messageText.trim() || messageBusy}
+              style={[
+                styles.sendButton,
+                (!messageText.trim() || messageBusy) && styles.disabled
+              ]}
+              onPress={handleSendMessage}
+            >
+              {messageBusy ? (
+                <ActivityIndicator size="small" color="#0b0d12" />
+              ) : (
+                <Ionicons name="send" size={19} color="#0b0d12" />
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
 
         <TouchableOpacity
@@ -524,6 +624,93 @@ const styles = StyleSheet.create({
     color: "#dce3ee",
     fontWeight: "700",
     fontSize: 13
+  },
+  chatPanel: {
+    marginTop: 20,
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#252d3a",
+    backgroundColor: "#11151c"
+  },
+  chatHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 10
+  },
+  messageCount: {
+    color: "#75e6b1",
+    fontSize: 12,
+    fontWeight: "800"
+  },
+  messageList: {
+    maxHeight: 260,
+    minHeight: 120
+  },
+  messageListContent: {
+    flexGrow: 1,
+    justifyContent: "flex-end",
+    gap: 8,
+    paddingVertical: 4
+  },
+  chatEmpty: {
+    color: "#68758a",
+    fontSize: 13,
+    textAlign: "center",
+    marginVertical: 40
+  },
+  messageBubble: {
+    maxWidth: "84%",
+    borderRadius: 10,
+    paddingHorizontal: 11,
+    paddingVertical: 8
+  },
+  ownMessageBubble: {
+    alignSelf: "flex-end",
+    backgroundColor: "#1d4b3c"
+  },
+  otherMessageBubble: {
+    alignSelf: "flex-start",
+    backgroundColor: "#252d3a"
+  },
+  messageAuthor: {
+    color: "#75e6b1",
+    fontSize: 10,
+    fontWeight: "800",
+    marginBottom: 3
+  },
+  messageText: {
+    color: "#f4f7fb",
+    fontSize: 14,
+    lineHeight: 19
+  },
+  messageComposer: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    gap: 8,
+    marginTop: 10
+  },
+  messageInput: {
+    flex: 1,
+    minHeight: 44,
+    maxHeight: 100,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#293140",
+    backgroundColor: "#151a23",
+    color: "#f4f7fb",
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14
+  },
+  sendButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#75e6b1"
   },
   endButton: {
     minHeight: 52,

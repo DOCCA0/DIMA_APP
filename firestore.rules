@@ -15,6 +15,11 @@ service cloud.firestore {
       return exists(roomPath) && get(roomPath).data.active == true;
     }
 
+    function isRoomParticipant(roomId) {
+      let participantPath = /databases/$(database)/documents/studyRooms/$(roomId)/participants/$(request.auth.uid);
+      return isSignedIn() && exists(participantPath);
+    }
+
     match /users/{userId} {
       allow read, write: if isSignedIn() && request.auth.uid == userId;
 
@@ -72,6 +77,29 @@ service cloud.firestore {
           && request.resource.data.cameraOn is bool;
 
         allow delete: if isSignedIn() && request.auth.uid == userId;
+      }
+
+      match /messages/{messageId} {
+        allow read: if isRoomParticipant(roomId);
+
+        allow create: if isRoomParticipant(roomId)
+          && isActiveRoom(roomId)
+          && request.resource.data.keys().hasOnly([
+            "userId",
+            "displayName",
+            "text",
+            "createdAt"
+          ])
+          && request.resource.data.userId == request.auth.uid
+          && request.resource.data.displayName is string
+          && request.resource.data.displayName.size() > 0
+          && request.resource.data.displayName.size() <= 80
+          && request.resource.data.text is string
+          && request.resource.data.text.size() > 0
+          && request.resource.data.text.size() <= 500
+          && request.resource.data.createdAt == request.time;
+
+        allow update, delete: if false;
       }
     }
   }
